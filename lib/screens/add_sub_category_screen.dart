@@ -1,0 +1,459 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:krm_admin/models/category_dropdown_model.dart';
+import 'package:krm_admin/services/sub_category_service.dart';
+
+class AddSubCategoryScreen extends StatefulWidget {
+  const AddSubCategoryScreen({super.key});
+
+  @override
+  State<AddSubCategoryScreen> createState() => _AddSubCategoryScreenState();
+}
+
+class _AddSubCategoryScreenState extends State<AddSubCategoryScreen> {
+  final SubCategoryService _subCategoryService = SubCategoryService();
+  final TextEditingController _subCategoryNameController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  
+  List<CategoryDropdownModel> _categories = [];
+  int? _selectedCategoryId;
+  File? _selectedImage;
+  bool _isLoading = false;
+  bool _isLoadingCategories = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCategories();
+  }
+
+  Future<void> _fetchCategories() async {
+    setState(() {
+      _isLoadingCategories = true;
+    });
+
+    final categories = await _subCategoryService.fetchCategories();
+    
+    setState(() {
+      _categories = categories;
+      _isLoadingCategories = false;
+      if (categories.isNotEmpty) {
+        _selectedCategoryId = categories.first.id;
+      }
+    });
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+        print('Image selected: ${image.path}');
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to pick image. Please try again.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveSubCategory() async {
+    if (_selectedCategoryId == null) {
+      setState(() {
+        _errorMessage = 'Please select a category';
+      });
+      return;
+    }
+
+    if (_subCategoryNameController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter sub-category name';
+      });
+      return;
+    }
+
+    if (_selectedImage == null) {
+      setState(() {
+        _errorMessage = 'Please select an image';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await _subCategoryService.createSubCategory(
+      _selectedCategoryId!,
+      _subCategoryNameController.text,
+      _selectedImage,
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success']) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
+      }
+    } else {
+      setState(() {
+        _errorMessage = result['message'];
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6C3CE1), Color(0xFF8B5CF6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Add Sub-Category',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.2,
+          ),
+        ),
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_errorMessage != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.red.shade100),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline_rounded, color: Colors.red.shade700, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(color: Colors.red.shade700, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // Category Selection Field
+                const Row(
+                  children: [
+                    Icon(Icons.list_alt_rounded, size: 18, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Text(
+                      'Parent Category *',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _isLoadingCategories
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: SizedBox(
+                            height: 28,
+                            width: 28,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF6C3CE1)),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: _selectedCategoryId,
+                            isExpanded: true,
+                            icon: const Icon(Icons.arrow_drop_down_rounded, color: Colors.grey),
+                            iconSize: 28,
+                            elevation: 16,
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            onChanged: (int? newValue) {
+                              setState(() {
+                                _selectedCategoryId = newValue;
+                              });
+                            },
+                            items: _categories
+                                .map<DropdownMenuItem<int>>((CategoryDropdownModel category) {
+                              return DropdownMenuItem<int>(
+                                value: category.id,
+                                child: Text(category.categoryName),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                const SizedBox(height: 22),
+
+                // Sub-Category Name Field
+                const Row(
+                  children: [
+                    Icon(Icons.category_outlined, size: 18, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Text(
+                      'Sub-Category Name *',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _subCategoryNameController,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  decoration: InputDecoration(
+                    hintText: 'Enter sub-category name',
+                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFF6C3CE1), width: 1.5),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 22),
+
+                // Image Field
+                const Row(
+                  children: [
+                    Icon(Icons.image_outlined, size: 18, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Text(
+                      'Sub-Category Image *',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 160,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.grey.shade300,
+                        width: 1.5,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                    child: _selectedImage != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.file(
+                                  _selectedImage!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return _buildImagePlaceholder();
+                                  },
+                                ),
+                                Container(
+                                  color: Colors.black.withOpacity(0.2),
+                                ),
+                                const Center(
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.white,
+                                    radius: 20,
+                                    child: Icon(Icons.edit_rounded, color: Color(0xFF6C3CE1), size: 18),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : _buildImagePlaceholder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Upload sub-category display image (PNG, JPG, WEBP formats supported)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade400,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Save Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _saveSubCategory,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6C3CE1),
+                      foregroundColor: Colors.white,
+                      elevation: 4,
+                      shadowColor: const Color(0xFF6C3CE1).withOpacity(0.3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Save Sub-Category',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePlaceholder() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.deepPurple.shade50,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.cloud_upload_outlined,
+            size: 28,
+            color: Color(0xFF6C3CE1),
+          ),
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          'Select Gallery Image',
+          style: TextStyle(
+            color: Colors.black54,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          'Max size 800x800 px',
+          style: TextStyle(
+            color: Colors.grey.shade400,
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _subCategoryNameController.dispose();
+    super.dispose();
+  }
+}
