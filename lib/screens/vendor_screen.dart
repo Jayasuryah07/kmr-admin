@@ -222,15 +222,21 @@ class _VendorScreenState extends State<VendorScreen> {
     final active = _vendors.where((v) => v.vendorStatus == 'Active').length;
     final inactive = _vendors.where((v) => v.vendorStatus == 'Inactive').length;
 
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+    Widget card1 = _buildSummaryCard('Total', total.toString(), const Color(0xFF6C3CE1), Icons.storefront_rounded);
+    Widget card2 = _buildSummaryCard('Active', active.toString(), const Color(0xFF10B981), Icons.check_circle_rounded);
+    Widget card3 = _buildSummaryCard('Inactive', inactive.toString(), const Color(0xFFEF4444), Icons.cancel_rounded);
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
       child: Row(
         children: [
-          Expanded(child: _buildSummaryCard('Total', total.toString(), const Color(0xFF6C3CE1), Icons.storefront_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card1) : Expanded(child: card1),
           const SizedBox(width: 10),
-          Expanded(child: _buildSummaryCard('Active', active.toString(), const Color(0xFF10B981), Icons.check_circle_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card2) : Expanded(child: card2),
           const SizedBox(width: 10),
-          Expanded(child: _buildSummaryCard('Inactive', inactive.toString(), const Color(0xFFEF4444), Icons.cancel_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card3) : Expanded(child: card3),
         ],
       ),
     );
@@ -778,14 +784,14 @@ class _VendorScreenState extends State<VendorScreen> {
             ),
             child: Row(
               children: [
-                _buildHeaderCell('SL No', 60),
+                _buildHeaderCell('SL No', null, flex: 1),
                 _buildHeaderCell('Vendor Name', null, flex: 3),
                 _buildHeaderCell('Mobile No', null, flex: 2),
                 _buildHeaderCell('Category', null, flex: 2),
                 _buildHeaderCell('Trader', null, flex: 2),
                 _buildHeaderCell('No of Products', null, flex: 2),
-                _buildHeaderCell('Status', 120),
-                _buildHeaderCell('Actions', 80),
+                _buildHeaderCell('Status', null, flex: 2),
+                _buildHeaderCell('Actions', null, flex: 1),
               ],
             ),
           ),
@@ -804,64 +810,51 @@ class _VendorScreenState extends State<VendorScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 child: Row(
                   children: [
-                    _buildCell('${globalIndex + 1}', 60),
+                    _buildCell('${globalIndex + 1}', null, flex: 1),
                     _buildCell(vendor.vendorName, null, flex: 3, isBold: true),
                     _buildCell(vendor.vendorMobile, null, flex: 2),
-                    TableCell(
+                    Expanded(
+                      flex: 2,
                       child: Padding(
                         padding: const EdgeInsets.only(right: 12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF5F0FF),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            vendor.vendorCategory, 
-                            style: const TextStyle(color: Color(0xFF6C3CE1), fontSize: 12, fontWeight: FontWeight.bold),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5F0FF),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              vendor.vendorCategory, 
+                              style: const TextStyle(color: Color(0xFF6C3CE1), fontSize: 12, fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
                       ),
                     ),
                     _buildCell(vendor.vendorTrader, null, flex: 2),
-                    TableCell(
-                      child: Row(
-                        children: [
-                          const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${vendor.vendorNoOfProducts} items', 
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)
-                          ),
-                        ],
+                    Expanded(
+                      flex: 2,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${vendor.vendorNoOfProducts} items', 
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                     _buildStatusCell(vendor),
-                    SizedBox(
-                      width: 80,
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, color: Color(0xFF6C3CE1), size: 20),
-                            onPressed: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => EditVendorScreen(
-                                    vendorId: vendor.id,
-                                  ),
-                                ),
-                              );
-                              if (result == true) {
-                                _fetchVendors();
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildStatusCell(vendor, flex: 2),
+                    _buildActionsCell(vendor, null, flex: 1),
                   ],
                 ),
               );
@@ -920,38 +913,70 @@ class _VendorScreenState extends State<VendorScreen> {
     );
   }
 
-  Widget _buildStatusCell(VendorModel vendor) {
+  Widget _buildStatusCell(VendorModel vendor, {double? width, int? flex}) {
     final status = vendor.vendorStatus;
     final isActive = status == 'Active';
-    return SizedBox(
-      width: 120,
-      child: Row(
-        children: [
-          InkWell(
-            onTap: () => _toggleVendorStatus(vendor),
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: isActive ? const Color(0xFFECFDF5) : const Color(0xFFFFF1F2),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isActive ? const Color(0xFFA7F3D0) : const Color(0xFFFECDD3),
-                ),
+    Widget content = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: () => _toggleVendorStatus(vendor),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: isActive ? const Color(0xFFECFDF5) : const Color(0xFFFFF1F2),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isActive ? const Color(0xFFA7F3D0) : const Color(0xFFFECDD3),
               ),
-              child: Text(
-                status,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isActive ? const Color(0xFF047857) : const Color(0xFFBE123C),
-                  fontWeight: FontWeight.bold,
-                ),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                fontSize: 11,
+                color: isActive ? const Color(0xFF047857) : const Color(0xFFBE123C),
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
+
+    if (width != null) {
+      return SizedBox(width: width, child: content);
+    }
+    return Expanded(flex: flex ?? 1, child: content);
+  }
+
+  Widget _buildActionsCell(VendorModel vendor, double? width, {int? flex}) {
+    Widget content = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.edit_outlined, color: Color(0xFF6C3CE1), size: 20),
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditVendorScreen(
+                  vendorId: vendor.id,
+                ),
+              ),
+            );
+            if (result == true) {
+              _fetchVendors();
+            }
+          },
+        ),
+      ],
+    );
+
+    if (width != null) {
+      return SizedBox(width: width, child: content);
+    }
+    return Expanded(flex: flex ?? 1, child: content);
   }
 
   Future<void> _toggleVendorStatus(VendorModel vendor) async {

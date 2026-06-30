@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:krm_admin/models/vendor_spot_rate_model.dart';
 import 'package:krm_admin/services/vendor_service.dart';
+import 'package:flutter/foundation.dart';
 
 class SpotScreen extends StatefulWidget {
   const SpotScreen({super.key});
@@ -218,15 +219,21 @@ class _SpotScreenState extends State<SpotScreen> {
     final activeCount = _spotItems.where((v) => v.vendorSpotStatus.toLowerCase() == 'active').length;
     final inactiveCount = _spotItems.where((v) => v.vendorSpotStatus.toLowerCase() == 'inactive').length;
 
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+    Widget card1 = _buildStatCard('Total Spot', totalCount.toString(), const Color(0xFF6C3CE1), Icons.bolt_rounded);
+    Widget card2 = _buildStatCard('Active Spot', activeCount.toString(), const Color(0xFF10B981), Icons.check_circle_outline_rounded);
+    Widget card3 = _buildStatCard('Inactive Spot', inactiveCount.toString(), const Color(0xFFEF4444), Icons.cancel_outlined);
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
       child: Row(
         children: [
-          Expanded(child: _buildStatCard('Total Spot', totalCount.toString(), const Color(0xFF6C3CE1), Icons.bolt_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card1) : Expanded(child: card1),
           const SizedBox(width: 10),
-          Expanded(child: _buildStatCard('Active Spot', activeCount.toString(), const Color(0xFF10B981), Icons.check_circle_outline_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card2) : Expanded(child: card2),
           const SizedBox(width: 10),
-          Expanded(child: _buildStatCard('Inactive Spot', inactiveCount.toString(), const Color(0xFFEF4444), Icons.cancel_outlined)),
+          isDesktop ? SizedBox(width: 250, child: card3) : Expanded(child: card3),
         ],
       ),
     );
@@ -730,18 +737,31 @@ class _SpotScreenState extends State<SpotScreen> {
                 ),
                  _buildTableCell(_buildStatusBadge(item)),
                 _buildTableCell(
-                  ElevatedButton.icon(
-                    onPressed: () => _showEditDialog(context, item),
-                    icon: const Icon(Icons.edit_outlined, size: 14),
-                    label: const Text('Edit'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF5F0FF),
-                      foregroundColor: const Color(0xFF6C3CE1),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                  ),
+                  
+
+ElevatedButton.icon(
+  onPressed: () => _showEditDialog(context, item),
+  icon: const Icon(Icons.edit_outlined, size: 14),
+  label: defaultTargetPlatform == TargetPlatform.android
+      ? const Text('Edit')
+      : const SizedBox.shrink(),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: defaultTargetPlatform == TargetPlatform.android
+        ? const Color(0xFFF5F0FF)
+        : Colors.transparent,
+    foregroundColor: const Color(0xFF6C3CE1),
+    elevation: 0,
+    shadowColor: Colors.transparent,
+    side: BorderSide(
+      color: defaultTargetPlatform == TargetPlatform.android
+          ? const Color(0xFFE9DEFF)
+          : Colors.transparent,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+),
                 ),
               ],
             );
@@ -945,17 +965,31 @@ class _SpotScreenState extends State<SpotScreen> {
                                 'Created: ${item.vendorSpotCreatedDate}',
                                 style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.w500),
                               ),
-                              ElevatedButton.icon(
-                                onPressed: () => _showEditDialog(context, item),
-                                icon: const Icon(Icons.edit_outlined, size: 14),
-                                label: const Text('Edit'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFF5F0FF),
-                                  foregroundColor: const Color(0xFF6C3CE1),
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
+                            
+
+ElevatedButton.icon(
+  onPressed: () => _showEditDialog(context, item),
+  icon: const Icon(Icons.edit_outlined, size: 14),
+  label: defaultTargetPlatform == TargetPlatform.android
+      ? const Text('Edit')
+      : const SizedBox.shrink(),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: defaultTargetPlatform == TargetPlatform.android
+        ? const Color(0xFFF5F0FF)
+        : Colors.transparent,
+    foregroundColor: const Color(0xFF6C3CE1),
+    elevation: 0,
+    shadowColor: Colors.transparent,
+    side: BorderSide(
+      color: defaultTargetPlatform == TargetPlatform.android
+          ? const Color(0xFFE9DEFF)
+          : Colors.transparent,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+),
                             ],
                           ),
                         ],

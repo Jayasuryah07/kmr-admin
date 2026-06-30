@@ -5,6 +5,7 @@ import 'package:krm_admin/models/vendor_model.dart';
 import 'package:krm_admin/screens/add_vendor_screen.dart';
 import 'package:krm_admin/services/auth_service.dart';
 import 'package:krm_admin/services/vendor_service.dart';
+import 'package:flutter/foundation.dart';
 
 class RatesScreen extends StatefulWidget {
   const RatesScreen({super.key});
@@ -250,15 +251,21 @@ class _RatesScreenState extends State<RatesScreen> {
     final activeCount = _vendors.where((v) => v.vendorStatus.toLowerCase() == 'active').length;
     final totalProducts = _vendors.fold<int>(0, (sum, v) => sum + v.vendorNoOfProducts);
 
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+    Widget card1 = _buildStatCard('Total Vendors', totalCount.toString(), const Color(0xFF6C3CE1), Icons.storefront_rounded);
+    Widget card2 = _buildStatCard('Active Vendors', activeCount.toString(), const Color(0xFF10B981), Icons.check_circle_outline_rounded);
+    Widget card3 = _buildStatCard('Total Products', totalProducts.toString(), const Color(0xFFEF4444), Icons.inventory_2_outlined);
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
       child: Row(
         children: [
-          Expanded(child: _buildStatCard('Total Vendors', totalCount.toString(), const Color(0xFF6C3CE1), Icons.storefront_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card1) : Expanded(child: card1),
           const SizedBox(width: 10),
-          Expanded(child: _buildStatCard('Active Vendors', activeCount.toString(), const Color(0xFF10B981), Icons.check_circle_outline_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card2) : Expanded(child: card2),
           const SizedBox(width: 10),
-          Expanded(child: _buildStatCard('Total Products', totalProducts.toString(), const Color(0xFFEF4444), Icons.inventory_2_outlined)),
+          isDesktop ? SizedBox(width: 250, child: card3) : Expanded(child: card3),
         ],
       ),
     );
@@ -589,31 +596,7 @@ class _RatesScreenState extends State<RatesScreen> {
         ),
         Row(
           children: [
-            GestureDetector(
-              onTap: () => _showAddRateDialog(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F0FF),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE9DEFF)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.add_chart_rounded, size: 18, color: Color(0xFF6C3CE1)),
-                    SizedBox(width: 4),
-                    Text(
-                      'Quick Add',
-                      style: TextStyle(
-                        color: Color(0xFF6C3CE1),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+        
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () async {
@@ -779,24 +762,37 @@ class _RatesScreenState extends State<RatesScreen> {
                     child: Text(vendor.vendorMobile, style: const TextStyle(fontSize: 13)),
                   ),
                 ),
-                TableCell(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F0FF),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        vendor.vendorCategory, 
-                        style: const TextStyle(color: Color(0xFF6C3CE1), fontSize: 11, fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ),
+               
+
+TableCell(
+  child: Padding(
+    padding: const EdgeInsets.all(12),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: defaultTargetPlatform == TargetPlatform.android
+            ? const Color(0xFFF5F0FF)
+            : Colors.transparent,
+        border: Border.all(
+          color: defaultTargetPlatform == TargetPlatform.android
+              ? const Color(0xFFE9DEFF)
+              : Colors.transparent,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        vendor.vendorCategory,
+        style: const TextStyle(
+          color: Color(0xFF6C3CE1),
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+  ),
+),
                 TableCell(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -1108,23 +1104,41 @@ class _RatesScreenState extends State<RatesScreen> {
     }
   }
 
-  Widget _buildActionBtn(BuildContext context, VendorModel vendor) {
-    return InkWell(
-      onTap: () => _showEditRatesDialog(context, vendor),
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F0FF),
-          border: Border.all(color: const Color(0xFFE9DEFF)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.edit_outlined, size: 14, color: Color(0xFF6C3CE1)),
-            SizedBox(width: 4),
-            Text(
+
+
+Widget _buildActionBtn(BuildContext context, VendorModel vendor) {
+  final bool isDesktop =
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.linux;
+
+  return InkWell(
+    onTap: () => _showEditRatesDialog(context, vendor),
+    borderRadius: BorderRadius.circular(10),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+  color: defaultTargetPlatform == TargetPlatform.android
+      ? const Color(0xFFF5F0FF)
+      : Colors.transparent,
+  border: Border.all(
+    color: defaultTargetPlatform == TargetPlatform.android
+        ? const Color(0xFFE9DEFF)
+        : Colors.transparent,
+  ),
+  borderRadius: BorderRadius.circular(8),
+),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.edit_outlined,
+            size: 14,
+            color: Color(0xFF6C3CE1),
+          ),
+          if (!isDesktop) ...[
+            const SizedBox(width: 4),
+            const Text(
               'Edit Rates',
               style: TextStyle(
                 color: Color(0xFF6C3CE1),
@@ -1133,10 +1147,11 @@ class _RatesScreenState extends State<RatesScreen> {
               ),
             ),
           ],
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildPaginationFooter() {
     final total = _filteredVendors.length;
