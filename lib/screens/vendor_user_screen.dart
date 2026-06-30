@@ -193,15 +193,21 @@ class _VendorUserScreenState extends State<VendorUserScreen> {
     final active = _users.where((u) => u.status == 'Active').length;
     final inactive = _users.where((u) => u.status == 'Inactive').length;
 
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+    Widget card1 = _buildSummaryCard('Total', total.toString(), const Color(0xFF6C3CE1), Icons.people_outline_rounded);
+    Widget card2 = _buildSummaryCard('Active', active.toString(), const Color(0xFF10B981), Icons.check_circle_rounded);
+    Widget card3 = _buildSummaryCard('Inactive', inactive.toString(), const Color(0xFFEF4444), Icons.cancel_rounded);
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
       child: Row(
         children: [
-          Expanded(child: _buildSummaryCard('Total', total.toString(), const Color(0xFF6C3CE1), Icons.people_outline_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card1) : Expanded(child: card1),
           const SizedBox(width: 10),
-          Expanded(child: _buildSummaryCard('Active', active.toString(), const Color(0xFF10B981), Icons.check_circle_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card2) : Expanded(child: card2),
           const SizedBox(width: 10),
-          Expanded(child: _buildSummaryCard('Inactive', inactive.toString(), const Color(0xFFEF4444), Icons.cancel_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card3) : Expanded(child: card3),
         ],
       ),
     );

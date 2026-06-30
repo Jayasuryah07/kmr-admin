@@ -119,6 +119,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: Colors.grey.shade50,
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: 280,
+              child: _buildPremiumDrawerContent(isDesktop: true),
+            ),
+            Expanded(
+              child: Scaffold(
+                backgroundColor: Colors.grey.shade50,
+                appBar: _buildPremiumAppBar(isDesktop: true),
+                body: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: _buildBody(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
@@ -133,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       },
       child: Scaffold(
         backgroundColor: Colors.grey.shade50,
-        appBar: _buildPremiumAppBar(),
+        appBar: _buildPremiumAppBar(isDesktop: false),
         drawer: _buildPremiumDrawer(),
         body: FadeTransition(
           opacity: _fadeAnimation,
@@ -214,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  PreferredSizeWidget _buildPremiumAppBar() {
+  PreferredSizeWidget _buildPremiumAppBar({bool isDesktop = false}) {
     return PreferredSize(
       preferredSize: const Size.fromHeight(100),
       child: Container(
@@ -241,27 +268,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               children: [
-                Builder(
-                  builder: (context) => GestureDetector(
-                    onTap: () => Scaffold.of(context).openDrawer(),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                if (!isDesktop) ...[
+                  Builder(
+                    builder: (context) => GestureDetector(
+                      onTap: () => Scaffold.of(context).openDrawer(),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                          ),
                         ),
-                      ),
-                      child: const Icon(
-                        Icons.menu_rounded,
-                        color: Colors.white,
-                        size: 24,
+                        child: const Icon(
+                          Icons.menu_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
+                  const SizedBox(width: 16),
+                ],
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,134 +386,140 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildPremiumDrawer() {
     return Drawer(
       elevation: 0,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
+      child: _buildPremiumDrawerContent(isDesktop: false),
+    );
+  }
+
+  Widget _buildPremiumDrawerContent({bool isDesktop = false}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Premium Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF6C3CE1),
+                  Color(0xFF8B5CF6),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomRight: Radius.circular(30),
+              ),
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Premium Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF6C3CE1),
-                    Color(0xFF8B5CF6),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.3),
+                        Colors.white.withOpacity(0.1),
+                      ],
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 45,
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      _userData?.name?.substring(0, 1).toUpperCase() ?? 'A',
+                      style: const TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6C3CE1),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _userData?.name ?? 'Admin User',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _userData?.email ?? 'admin@mail.com',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Menu Items
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              children: [
+                _buildPremiumMenuItem(
+                  'Dashboard',
+                  Icons.grid_view_rounded,
+                  0,
+                  isSelected: _selectedIndex == 0,
+                  isDesktop: isDesktop,
+                ),
+                const Divider(height: 16, color: Colors.grey, thickness: 0.5),
+                // Master Menu
+                _buildPremiumParentMenu(
+                  'Master',
+                  Icons.dashboard_customize_rounded,
+                  _isMasterExpanded,
+                  [
+                    _buildPremiumMenuItem('Category', Icons.category_rounded, 1, isChild: true, isSelected: _selectedIndex == 1, isDesktop: isDesktop),
+                    _buildPremiumMenuItem('SubCategory', Icons.list_alt_rounded, 2, isChild: true, isSelected: _selectedIndex == 2, isDesktop: isDesktop),
+                    _buildPremiumMenuItem('Vendor', Icons.storefront_rounded, 3, isChild: true, isSelected: _selectedIndex == 3, isDesktop: isDesktop),
+                    // _buildPremiumMenuItem('Vendor User', Icons.person_rounded, 4, isChild: true, isSelected: _selectedIndex == 4, isDesktop: isDesktop),
                   ],
                 ),
-                borderRadius: const BorderRadius.only(
-                  bottomRight: Radius.circular(30),
+                // App Update Menu
+                _buildPremiumParentMenu(
+                  'App Update',
+                  Icons.system_update_rounded,
+                  _isAppUpdateExpanded,
+                  [
+                    _buildPremiumMenuItem('Live', Icons.live_tv_rounded, 6, isChild: true, isSelected: _selectedIndex == 6, isDesktop: isDesktop),
+                    _buildPremiumMenuItem('Rates', Icons.attach_money_rounded, 7, isChild: true, isSelected: _selectedIndex == 7, isDesktop: isDesktop),
+                    _buildPremiumMenuItem('Spot', Icons.bolt_rounded, 8, isChild: true, isSelected: _selectedIndex == 8, isDesktop: isDesktop),
+                    _buildPremiumMenuItem('News', Icons.newspaper_rounded, 9, isChild: true, isSelected: _selectedIndex == 9, isDesktop: isDesktop),
+                  ],
                 ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.3),
-                          Colors.white.withOpacity(0.1),
-                        ],
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      radius: 45,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        _userData?.name?.substring(0, 1).toUpperCase() ?? 'A',
-                        style: const TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF6C3CE1),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _userData?.name ?? 'Admin User',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _userData?.email ?? 'admin@mail.com',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 13,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                
+                const SizedBox(height: 8),
+                _buildPremiumMenuItem(
+                  'Logout',
+                  Icons.logout_rounded,
+                  -1,
+                  isLogout: true,
+                  isDesktop: isDesktop,
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            // Menu Items
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                children: [
-                  _buildPremiumMenuItem(
-                    'Dashboard',
-                    Icons.grid_view_rounded,
-                    0,
-                    isSelected: _selectedIndex == 0,
-                  ),
-                  const Divider(height: 16, color: Colors.grey, thickness: 0.5),
-                  // Master Menu
-                  _buildPremiumParentMenu(
-                    'Master',
-                    Icons.dashboard_customize_rounded,
-                    _isMasterExpanded,
-                    [
-                      _buildPremiumMenuItem('Category', Icons.category_rounded, 1, isChild: true, isSelected: _selectedIndex == 1),
-                      _buildPremiumMenuItem('SubCategory', Icons.list_alt_rounded, 2, isChild: true, isSelected: _selectedIndex == 2),
-                      _buildPremiumMenuItem('Vendor', Icons.storefront_rounded, 3, isChild: true, isSelected: _selectedIndex == 3),
-                      // _buildPremiumMenuItem('Vendor User', Icons.person_rounded, 4, isChild: true, isSelected: _selectedIndex == 4),
-                    ],
-                  ),
-                  // App Update Menu
-                  _buildPremiumParentMenu(
-                    'App Update',
-                    Icons.system_update_rounded,
-                    _isAppUpdateExpanded,
-                    [
-                      _buildPremiumMenuItem('Live', Icons.live_tv_rounded, 6, isChild: true, isSelected: _selectedIndex == 6),
-                      _buildPremiumMenuItem('Rates', Icons.attach_money_rounded, 7, isChild: true, isSelected: _selectedIndex == 7),
-                      _buildPremiumMenuItem('Spot', Icons.bolt_rounded, 8, isChild: true, isSelected: _selectedIndex == 8),
-                      _buildPremiumMenuItem('News', Icons.newspaper_rounded, 9, isChild: true, isSelected: _selectedIndex == 9),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 8),
-                  _buildPremiumMenuItem(
-                    'Logout',
-                    Icons.logout_rounded,
-                    -1,
-                    isLogout: true,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -555,6 +590,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     bool isChild = false,
     bool isSelected = false,
     bool isLogout = false,
+    bool isDesktop = false,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
@@ -605,7 +641,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             setState(() {
               _selectedIndex = index;
             });
-            Navigator.pop(context);
+            if (!isDesktop) {
+              Navigator.pop(context);
+            }
           }
         },
       ),
@@ -850,7 +888,7 @@ class _DashboardContentState extends State<DashboardContent> with SingleTickerPr
                           // Recent News & Vendors
                           LayoutBuilder(
                             builder: (context, constraints) {
-                              if (constraints.maxWidth >= 900) {
+                              if (constraints.maxWidth >= 700) {
                                 return Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -893,7 +931,7 @@ class _DashboardContentState extends State<DashboardContent> with SingleTickerPr
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: screenWidth < 450 ? 2 : 5,
+        crossAxisCount: screenWidth < 450 ? 2 : stats.length,
         crossAxisSpacing: 14,
         mainAxisSpacing: 14,
         childAspectRatio: screenWidth < 450 ? 1.0 : 1.15,

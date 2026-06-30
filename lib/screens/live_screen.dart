@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:krm_admin/models/vendor_live_model.dart';
 import 'package:krm_admin/services/vendor_service.dart';
+import 'package:flutter/foundation.dart';
 
 class LiveScreen extends StatefulWidget {
   const LiveScreen({super.key});
@@ -199,15 +200,21 @@ class _LiveScreenState extends State<LiveScreen> {
     final active = _liveItems.where((v) => v.vendorProductStatus.toLowerCase() == 'active').length;
     final inactive = _liveItems.where((v) => v.vendorProductStatus.toLowerCase() == 'inactive').length;
 
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+    Widget card1 = _buildStatCard('Total Products', total.toString(), const Color(0xFF6C3CE1), Icons.live_tv_rounded);
+    Widget card2 = _buildStatCard('Active Rates', active.toString(), const Color(0xFF10B981), Icons.trending_up_rounded);
+    Widget card3 = _buildStatCard('Inactive Rates', inactive.toString(), const Color(0xFFEF4444), Icons.trending_flat_rounded);
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
       child: Row(
         children: [
-          Expanded(child: _buildStatCard('Total Products', total.toString(), const Color(0xFF6C3CE1), Icons.live_tv_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card1) : Expanded(child: card1),
           const SizedBox(width: 10),
-          Expanded(child: _buildStatCard('Active Rates', active.toString(), const Color(0xFF10B981), Icons.trending_up_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card2) : Expanded(child: card2),
           const SizedBox(width: 10),
-          Expanded(child: _buildStatCard('Inactive Rates', inactive.toString(), const Color(0xFFEF4444), Icons.trending_flat_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card3) : Expanded(child: card3),
         ],
       ),
     );
@@ -600,24 +607,32 @@ class _LiveScreenState extends State<LiveScreen> {
                     ),
                   ),
                 ),
-                TableCell(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F0FF),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        item.vendorProductCategorySub, 
-                        style: const TextStyle(color: Color(0xFF6C3CE1), fontSize: 11, fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ),
+               
+
+TableCell(
+  child: Padding(
+    padding: const EdgeInsets.all(12),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: defaultTargetPlatform == TargetPlatform.android
+            ? const Color(0xFFF5F0FF)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        item.vendorProductCategorySub,
+        style: const TextStyle(
+          color: Color(0xFF6C3CE1),
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+  ),
+),
                 TableCell(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -906,23 +921,41 @@ class _LiveScreenState extends State<LiveScreen> {
     }
   }
 
-  Widget _buildActionBtn(BuildContext context, VendorLiveModel item) {
-    return InkWell(
-      onTap: () => _showEditDialog(context, item),
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F0FF),
-          border: Border.all(color: const Color(0xFFE9DEFF)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.edit_outlined, size: 14, color: Color(0xFF6C3CE1)),
-            SizedBox(width: 4),
-            Text(
+  
+
+Widget _buildActionBtn(BuildContext context, VendorLiveModel item) {
+  final bool isDesktop =
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.linux;
+
+  return InkWell(
+    onTap: () => _showEditDialog(context, item),
+    borderRadius: BorderRadius.circular(10),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+           color: defaultTargetPlatform == TargetPlatform.android
+            ? const Color(0xFFF5F0FF)
+            : Colors.transparent,
+        border: Border.all(
+  color: defaultTargetPlatform == TargetPlatform.android
+      ? const Color(0xFFE9DEFF)
+      : Colors.transparent,
+),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.edit_outlined,
+            size: 14,
+            color: Color(0xFF6C3CE1),
+          ),
+          if (!isDesktop) ...[
+            const SizedBox(width: 4),
+            const Text(
               'Edit',
               style: TextStyle(
                 color: Color(0xFF6C3CE1),
@@ -931,10 +964,13 @@ class _LiveScreenState extends State<LiveScreen> {
               ),
             ),
           ],
-        ),
+
+
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildPaginationFooter() {
     final total = _filteredItems.length;

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:krm_admin/models/news_model.dart';
 import 'package:krm_admin/services/news_service.dart';
+import 'package:flutter/foundation.dart';
 
 class NewsScreen extends StatefulWidget {
   const NewsScreen({super.key});
@@ -209,15 +210,21 @@ class _NewsScreenState extends State<NewsScreen> {
     final activeCount = _newsItems.where((v) => v.newsStatus.toLowerCase() == 'active').length;
     final inactiveCount = _newsItems.where((v) => v.newsStatus.toLowerCase() == 'inactive').length;
 
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+    Widget card1 = _buildStatCard('Total Stories', totalCount.toString(), const Color(0xFF6C3CE1), Icons.newspaper_rounded);
+    Widget card2 = _buildStatCard('Active Stories', activeCount.toString(), const Color(0xFF10B981), Icons.check_circle_outline_rounded);
+    Widget card3 = _buildStatCard('Inactive Stories', inactiveCount.toString(), const Color(0xFFEF4444), Icons.cancel_outlined);
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
       child: Row(
         children: [
-          Expanded(child: _buildStatCard('Total Stories', totalCount.toString(), const Color(0xFF6C3CE1), Icons.newspaper_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card1) : Expanded(child: card1),
           const SizedBox(width: 10),
-          Expanded(child: _buildStatCard('Active Stories', activeCount.toString(), const Color(0xFF10B981), Icons.check_circle_outline_rounded)),
+          isDesktop ? SizedBox(width: 250, child: card2) : Expanded(child: card2),
           const SizedBox(width: 10),
-          Expanded(child: _buildStatCard('Inactive Stories', inactiveCount.toString(), const Color(0xFFEF4444), Icons.cancel_outlined)),
+          isDesktop ? SizedBox(width: 250, child: card3) : Expanded(child: card3),
         ],
       ),
     );
@@ -810,18 +817,32 @@ class _NewsScreenState extends State<NewsScreen> {
                 ),
                 _buildTableCell(_buildStatusBadge(item)),
                 _buildTableCell(
-                  ElevatedButton.icon(
-                    onPressed: () => _showEditDialog(context, item),
-                    icon: const Icon(Icons.edit_outlined, size: 14),
-                    label: const Text('Edit'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF5F0FF),
-                      foregroundColor: const Color(0xFF6C3CE1),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                  ),
+                 
+
+ElevatedButton.icon(
+  onPressed: () => _showEditDialog(context, item),
+  icon: const Icon(Icons.edit_outlined, size: 14),
+  label: defaultTargetPlatform == TargetPlatform.android
+      ? const Text('Edit')
+      : const SizedBox.shrink(),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: defaultTargetPlatform == TargetPlatform.android
+        ? const Color(0xFFF5F0FF)
+        : Colors.transparent,
+    foregroundColor: const Color(0xFF6C3CE1),
+    elevation: 0,
+    shadowColor: Colors.transparent,
+    side: BorderSide(
+      color: defaultTargetPlatform == TargetPlatform.android
+          ? const Color(0xFFE9DEFF)
+          : Colors.transparent,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  ),
+),
                 ),
               ],
             );
@@ -952,17 +973,32 @@ class _NewsScreenState extends State<NewsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              ElevatedButton.icon(
-                                onPressed: () => _showEditDialog(context, item),
-                                icon: const Icon(Icons.edit_outlined, size: 14),
-                                label: const Text('Edit'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFF5F0FF),
-                                  foregroundColor: const Color(0xFF6C3CE1),
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
+                            
+
+ElevatedButton.icon(
+  onPressed: () => _showEditDialog(context, item),
+  icon: const Icon(Icons.edit_outlined, size: 14),
+  label: defaultTargetPlatform == TargetPlatform.android
+      ? const Text('Edit')
+      : const SizedBox.shrink(),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: defaultTargetPlatform == TargetPlatform.android
+        ? const Color(0xFFF5F0FF)
+        : Colors.transparent,
+    foregroundColor: const Color(0xFF6C3CE1),
+    elevation: 0,
+    shadowColor: Colors.transparent,
+    side: BorderSide(
+      color: defaultTargetPlatform == TargetPlatform.android
+          ? const Color(0xFFE9DEFF)
+          : Colors.transparent,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  ),
+),
                             ],
                           ),
                         ],
